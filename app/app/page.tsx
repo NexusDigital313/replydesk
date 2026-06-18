@@ -156,10 +156,8 @@ export default function AppPage() {
     "replydesk.key",
     "",
   );
-  const { value: license, set: setLicense } = useLocalStorage<string>(
-    "replydesk.license",
-    "",
-  );
+  const { value: license, set: setLicense, hydrated: lHydrated } =
+    useLocalStorage<string>("replydesk.license", "");
   const { value: demoPro, set: setDemoPro } = useLocalStorage<boolean>(
     "replydesk.demoPro",
     false,
@@ -251,6 +249,34 @@ export default function AppPage() {
     if (upgrade || google) window.history.replaceState({}, "", "/app");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-verify a real (Stripe) license against the live subscription on load, so a
+  // cancelled / refunded / lapsed subscription loses Pro within ~a visit instead
+  // of coasting on a long-lived token. Demo and free unlocks are unaffected.
+  const licenseChecked = useRef(false);
+  useEffect(() => {
+    if (licenseChecked.current || !lHydrated) return;
+    const d = decodeLicense(license);
+    if (!d?.sub) return; // no real subscription token to check
+    licenseChecked.current = true;
+    fetch("/api/license", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: d.sub }),
+    })
+      .then(async (r) => {
+        if (r.ok) {
+          const j = await r.json();
+          if (j.license) setLicense(j.license); // still active — refresh the token
+        } else if (r.status === 402) {
+          setLicense(""); // subscription ended — back to Free
+          flash("Your Pro subscription has ended — you're back on the free plan.");
+        }
+        // 400 (billing not configured) / 5xx / network: leave the license as-is
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lHydrated, license]);
 
   const setupNeeded = pHydrated && !profile.name.trim();
 

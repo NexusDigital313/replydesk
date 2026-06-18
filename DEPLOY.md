@@ -32,13 +32,21 @@ Add only what you want to turn on. Nothing here is required to go live.
 - **Freemium demo (fastest):** set nothing. Or set `NEXT_PUBLIC_PAYWALL=0` to let everyone try the full Pro experience.
 - **Paid launch:** set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `LICENSE_SECRET`, `NEXT_PUBLIC_APP_URL` (+ `ANTHROPIC_API_KEY` if you cover Claude).
 
-## ⚠️ Before charging real money
+## Billing safety
 
-There's **no Stripe webhook** yet — a paid license token is valid ~35 days regardless of
-cancellation/refund, so someone could cancel and keep Pro until it expires. Fine for a
-soft launch; for real revenue, add a webhook (`/api/stripe/webhook`) that revokes on
-`customer.subscription.deleted` and shorten the token, or re-verify the subscription on
-each visit. Ask and I'll build it.
+Pro access is tied to the **live Stripe subscription**, no database required:
+
+- The license token is short (2 days) and the app **re-verifies the subscription on
+  every load** (`POST /api/license { subscription }`) — if Stripe reports it cancelled,
+  refunded, or lapsed, the client drops to Free immediately and the token isn't renewed.
+- Worst case someone keeps Pro is until their current token expires (≤2 days) without
+  reopening the app.
+
+If you want *instant* revocation (the moment they cancel, not on next visit), add a
+Stripe webhook on `customer.subscription.deleted` — but that needs a small store (e.g.
+Vercel KV) to record the revocation, since the license token lives in the browser. The
+re-verification above is the DB-less default and is enough for launch. Ask if you want
+the webhook + KV path.
 
 ## Notes
 - All user data (business profile, saved replies, license, API key) lives in the browser's
