@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Claude-esque palette ──────────────────────────────────────────
+     Brand ramp is the signature "clay/coral" (#D97757). Remapping it here
+     recolors every brand-* utility across the landing page and the app. */
+  --color-brand-50: #faf0eb;
+  --color-brand-100: #f3ddd1;
+  --color-brand-200: #e8bca6;
+  --color-brand-300: #db9a7b;
+  --color-brand-500: #d97757; /* Claude clay — the bright accent */
+  --color-brand-600: #c15f3c; /* buttons / primary */
+  --color-brand-700: #9e4a2c; /* deep clay — emphasis text & CTA block */
+
+  /* Soft neutral grey canvas — lets white cards layer like an app UI */
+  --color-bone: #f4f4f5; /* page canvas */
+  --color-ivory: #eaeaec; /* banded sections */
+  --color-line: #e0e0e3; /* hairline */
+
+  /* Type roles */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-fraunces), "Fraunces", Georgia, "Times New Roman",
+    serif;
+
+  /* Depth: layered soft shadows so elements float above the canvas */
+  --shadow-float: 0 1px 2px rgba(28, 25, 23, 0.04),
+    0 10px 24px -10px rgba(28, 25, 23, 0.13),
+    0 30px 60px -26px rgba(28, 25, 23, 0.2);
+  --shadow-lift: 0 2px 4px rgba(28, 25, 23, 0.05),
+    0 18px 40px -14px rgba(28, 25, 23, 0.22),
+    0 44px 80px -32px rgba(28, 25, 23, 0.24);
+  --shadow-chip: 0 1px 2px rgba(28, 25, 23, 0.06),
+    0 12px 28px -10px rgba(28, 25, 23, 0.28);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-bone);
+  color: #1c1917;
+  font-family: var(--font-sans);
+}
+
+/* Display face: optical sizing + a touch of softness reads warm, not fashion-y */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: #1c1917;
+}
+
+textarea,
+input,
+select {
+  font: inherit;
+}
+
+/* Quality floor: visible, on-brand keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Entrance only ───────────────────────────────────────────────────
+   A one-time staggered rise-in on load. No perpetual motion — depth comes
+   from layered shadows, overlap, and the static 3D tilt, not animation. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rise { animation: rise-in 0.85s cubic-bezier(0.22, 0.68, 0.2, 1) both; }
+
+/* The hero scene: a shared 3D space so floating layers read as depth */
+.scene { perspective: 1400px; }
+.tilt {
+  transform: rotateY(-9deg) rotateX(4deg);
+  transition: transform 0.6s cubic-bezier(0.22, 0.68, 0.2, 1);
+}
+.scene:hover .tilt {
+  transform: rotateY(0deg) rotateX(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .tilt { transform: none; }
+}
