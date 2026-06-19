@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { signLicense } from "@/lib/license";
+import { revoke, unrevoke } from "@/lib/kv";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,8 +60,10 @@ export async function POST(req: Request) {
       );
     }
     if (!ACTIVE.has(sub.status)) {
+      await revoke(body.subscription); // flag in KV so other open sessions cut off too
       return NextResponse.json({ active: false, status: sub.status }, { status: 402 });
     }
+    await unrevoke(sub.id); // active again — clear any stale revocation flag
     const customer = typeof sub.customer === "string" ? sub.customer : undefined;
     return NextResponse.json({ license: issue(secret, customer, sub.id) });
   }

@@ -5,6 +5,7 @@ import {
   localReply,
 } from "@/lib/localEngine";
 import { verifyLicense } from "@/lib/license";
+import { isRevoked } from "@/lib/kv";
 import type { DraftRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -28,7 +29,14 @@ export async function POST(req: Request) {
   // Entitlement: when LICENSE_SECRET is set the paywall is live and Claude is
   // a Pro capability. Without it (self-host / dev), everyone is Pro.
   const secret = process.env.LICENSE_SECRET;
-  const isPro = secret ? !!(license && verifyLicense(license, secret)) : true;
+  let isPro = !secret;
+  if (secret && license) {
+    const decoded = verifyLicense(license, secret);
+    isPro = !!decoded;
+    // Instant revocation: a cancelled subscription is flagged in KV by the Stripe
+    // webhook, so we cut Claude off even while the signed token is still valid.
+    if (isPro && decoded?.sub && (await isRevoked(decoded.sub))) isPro = false;
+  }
 
   const key = (apiKey || process.env.ANTHROPIC_API_KEY || "").trim();
   const canUseClaude = isPro && !!key;

@@ -14,7 +14,7 @@ import type { BusinessProfile, DraftRequest, Tone } from "./types";
 type Theme = { key: string; label: string; words: string[] };
 
 const THEMES: Theme[] = [
-  { key: "wait", label: "the wait", words: ["wait", "waited", "waiting", "slow", "long time", "forever", "took ages", "delay", "delayed", "queue", "line"] },
+  { key: "wait", label: "the wait", words: ["wait", "waited", "waiting", "slow", "long time", "forever", "took ages", "delay", "delayed", "queue", "line", "late", "minutes", "hour", "hours", "never came", "still waiting"] },
   { key: "food", label: "the food", words: ["food", "meal", "dish", "cold", "undercooked", "overcooked", "portion", "taste", "tasted", "flavor", "flavour", "stale", "fresh", "delicious", "menu", "coffee", "drink"] },
   { key: "service", label: "the service", words: ["service", "server", "waiter", "waitress", "staff", "rude", "friendly", "attentive", "ignored", "helpful", "polite", "manager"] },
   { key: "cleanliness", label: "the cleanliness", words: ["dirty", "clean", "cleanliness", "hygiene", "messy", "spotless", "smell", "smelled", "bathroom", "restroom", "table"] },
@@ -178,10 +178,11 @@ function bodyFor(band: Band, intensity: Intensity, list: string, name: string): 
     if (intensity === 2) return ` We hear you on ${list}, and we're already looking at how to tighten that up.`;
     return ` Your note about ${list} is fair, and we'll take a look.`;
   }
-  // negative
+  // negative — the opener already apologizes, so acknowledge specifically here
+  // instead of repeating "sorry" (avoids the double-apology that reads templated)
   if (intensity >= 3) return ` What you described about ${list} is unacceptable, and we're addressing it directly and immediately with the team.`;
   if (intensity === 2) return ` What you experienced with ${list} isn't right, and we're looking into it with the team.`;
-  return ` We're sorry ${list} wasn't up to par.`;
+  return ` The trouble with ${list} isn't the experience we want you to have, and we're taking a look.`;
 }
 
 export function localReply(req: DraftRequest): string {

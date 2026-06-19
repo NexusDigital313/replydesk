@@ -42,11 +42,25 @@ Pro access is tied to the **live Stripe subscription**, no database required:
 - Worst case someone keeps Pro is until their current token expires (≤2 days) without
   reopening the app.
 
-If you want *instant* revocation (the moment they cancel, not on next visit), add a
-Stripe webhook on `customer.subscription.deleted` — but that needs a small store (e.g.
-Vercel KV) to record the revocation, since the license token lives in the browser. The
-re-verification above is the DB-less default and is enough for launch. Ask if you want
-the webhook + KV path.
+### Instant revocation (optional, built-in)
+
+For revocation the moment a customer cancels (not just on next visit), turn on the
+webhook + KV path:
+
+1. **Create a KV store:** Vercel dashboard → Storage → create a KV (Upstash Redis) store
+   and link it to this project. `KV_REST_API_URL` and `KV_REST_API_TOKEN` are added to the
+   project's env automatically.
+2. **Add the Stripe webhook:** Stripe → Developers → Webhooks → add endpoint
+   `https://YOUR_DOMAIN/api/stripe/webhook`, subscribe to
+   `customer.subscription.deleted`, `customer.subscription.updated`,
+   `customer.subscription.paused`, and copy its **Signing secret** into
+   `STRIPE_WEBHOOK_SECRET`.
+
+How it works: the webhook verifies Stripe's signature, then flags the subscription as
+revoked in KV; `/api/draft` checks that flag before calling Claude, so access stops on the
+next draft. It **fails open** — if KV is unreachable, paying customers are never wrongly
+locked out, and the ≤2-day re-verification remains the backstop. Leave KV/webhook unset and
+you simply keep the visit-based revocation above (fine for launch).
 
 ## Notes
 - All user data (business profile, saved replies, license, API key) lives in the browser's

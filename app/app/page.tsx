@@ -406,15 +406,15 @@ export default function AppPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-stone-950">
       {/* header */}
-      <header className="border-b border-line bg-bone/80 backdrop-blur">
+      <header className="border-b border-stone-800 bg-stone-900/80 text-stone-100 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <Spark className="h-7 w-7 text-brand-500" />
+            <Spark className="h-10 w-10 text-brand-500" />
             <div>
-              <div className="font-display text-lg font-semibold leading-none tracking-tight">ReplyDesk</div>
-              <div className="text-xs text-stone-500">On-brand replies to every review</div>
+              <div className="font-display text-xl font-semibold leading-none tracking-tight">ReplyDesk</div>
+              <div className="text-xs text-stone-400">On-brand replies to every review</div>
             </div>
           </Link>
 
@@ -708,7 +708,7 @@ function Dashboard({ reviews }: { reviews: ReviewItem[] }) {
 
   return (
     <section className="mt-8">
-      <h2 className="mb-3 font-display text-base font-medium tracking-tight">Reputation snapshot</h2>
+      <h2 className="mb-3 font-display text-base font-medium tracking-tight text-stone-100">Reputation snapshot</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Replies handled" value={String(stats.total)} sub="all time" />
         <Stat
@@ -776,7 +776,7 @@ function History({
   if (!reviews.length) return null;
   return (
     <section className="mt-8">
-      <h2 className="mb-3 font-display text-base font-medium tracking-tight">Saved replies</h2>
+      <h2 className="mb-3 font-display text-base font-medium tracking-tight text-stone-100">Saved replies</h2>
       <div className="space-y-3">
         {reviews.map((r) => (
           <article key={r.id} className="rounded-2xl border border-line bg-white p-5 shadow-float">
