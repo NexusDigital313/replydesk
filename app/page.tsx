@@ -10,15 +10,25 @@ function Spark({ className = "" }: { className?: string }) {
   );
 }
 
+/* Brand mark — bold forward "motion" bars, matching the ReplyDesk promo emblem. */
+function Mark({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M2 19.5 L6 19.5 L11 4.5 L7 4.5 Z" />
+      <path d="M10 19.5 L14 19.5 L19 4.5 L15 4.5 Z" />
+    </svg>
+  );
+}
+
 export default function Landing() {
   return (
     <div className="min-h-screen overflow-x-clip bg-stone-950 text-stone-100">
       {/* nav */}
       <header className="sticky top-0 z-30 border-b border-stone-800/80 bg-stone-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <Spark className="h-10 w-10 text-brand-500" />
-            <span className="font-display text-2xl font-semibold tracking-tight">
+          <div className="flex items-center gap-3">
+            <Mark className="h-12 w-12 text-brand-500" />
+            <span className="font-display text-3xl font-semibold tracking-tight">
               ReplyDesk
             </span>
           </div>
@@ -84,6 +94,14 @@ export default function Landing() {
             >
               No card required · 15 free replies a month · works in your browser
             </p>
+            <div
+              className="rise mt-5 inline-flex items-center gap-2 rounded-full border border-stone-700/70 bg-stone-900/60 px-3 py-1.5 text-xs font-medium text-stone-300"
+              style={{ animationDelay: "0.28s" }}
+            >
+              <Spark className="h-3.5 w-3.5 text-brand-400" />
+              Pro drafting powered by the{" "}
+              <span className="font-semibold text-stone-100">Claude API</span> from Anthropic
+            </div>
           </div>
 
           {/* floating product scene */}
