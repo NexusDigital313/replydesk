@@ -1,10 +1,12 @@
 /**
  * Client-side Anthropic engine. The browser talks to api.anthropic.com DIRECTLY
  * with the user's on-device key — no ReplyDesk server is ever in the path
- * (local-first, accountless). With no key there are simply no AI drafts yet
- * ("Set up later"); callers only invoke these when a key is present.
+ * (local-first, accountless). When there's no key, everything falls back to the
+ * built-in local engine so the app stays fully usable ("Set up later").
  */
 
+import { localReply } from "./localEngine";
+import type { BusinessProfile, DraftRequest, Tone } from "./types";
 import type { VoiceProfile } from "./voice";
 import { buildDraftSystem } from "./voice";
 import type { RefundPolicy } from "./settings";
@@ -167,28 +169,71 @@ function userPromptFor(message: DraftMessage, nudge: Nudge): string {
     .join("\n");
 }
 
-export interface DraftResult {
-  text: string;
-  source: "claude";
+/** Map the redesign's nudge to the local engine's Tone for the no-key fallback. */
+function nudgeToTone(nudge: Nudge): Tone {
+  switch (nudge) {
+    case "formal":
+      return "professional";
+    case "shorter":
+      return "concise";
+    default:
+      return "warm";
+  }
 }
 
-/** Generate a reply in the owner's voice (requires a key; throws otherwise). */
+function localBusiness(profile: VoiceProfile | null): BusinessProfile {
+  return {
+    name: profile?.business ?? "",
+    type: "",
+    tone: "warm",
+    signature: profile?.signaturePhrases?.[0] ?? "",
+    contact: "",
+  };
+}
+
+function localDraft(message: DraftMessage, profile: VoiceProfile | null, nudge: Nudge): string {
+  const req: DraftRequest = {
+    review: message.body,
+    rating: message.rating ?? 5,
+    tone: nudgeToTone(nudge),
+    author: message.name,
+    business: localBusiness(profile),
+  };
+  return localReply(req);
+}
+
+export interface DraftResult {
+  text: string;
+  source: "claude" | "local";
+  warning?: string;
+}
+
+/** Generate a reply. Uses Claude (with key) or the local engine (without). */
 export async function draftReply(opts: {
   message: DraftMessage;
   profile: VoiceProfile | null;
   policy: RefundPolicy;
   nudge?: Nudge;
 }): Promise<DraftResult> {
-  const text = await call({
-    model: DRAFT_MODEL,
-    system: buildDraftSystem(opts.profile, opts.policy),
-    maxTokens: 700,
-    messages: [{ role: "user", content: userPromptFor(opts.message, opts.nudge ?? "base") }],
-  });
-  return { text, source: "claude" };
+  const nudge = opts.nudge ?? "base";
+  if (hasKey()) {
+    try {
+      const text = await call({
+        model: DRAFT_MODEL,
+        system: buildDraftSystem(opts.profile, opts.policy),
+        maxTokens: 700,
+        messages: [{ role: "user", content: userPromptFor(opts.message, nudge) }],
+      });
+      if (text) return { text, source: "claude" };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Claude unavailable";
+      return { text: localDraft(opts.message, opts.profile, nudge), source: "local", warning: msg };
+    }
+  }
+  return { text: localDraft(opts.message, opts.profile, nudge), source: "local" };
 }
 
-/** Rewrite an existing draft per a tone nudge (requires a key; throws otherwise). */
+/** Rewrite an existing draft per a tone nudge (Claude); local engine re-rolls without a key. */
 export async function rewriteReply(opts: {
   draft: string;
   nudge: Nudge;
@@ -196,20 +241,28 @@ export async function rewriteReply(opts: {
   profile: VoiceProfile | null;
   policy: RefundPolicy;
 }): Promise<DraftResult> {
-  const user = [
-    NUDGE_HINT[opts.nudge] || "Rewrite this reply.",
-    "Keep it in the owner's voice and obey the refund policy above.",
-    "",
-    "Current reply:",
-    '"""',
-    opts.draft,
-    '"""',
-  ].join("\n");
-  const text = await call({
-    model: DRAFT_MODEL,
-    system: buildDraftSystem(opts.profile, opts.policy),
-    maxTokens: 700,
-    messages: [{ role: "user", content: user }],
-  });
-  return { text, source: "claude" };
+  if (hasKey()) {
+    try {
+      const user = [
+        NUDGE_HINT[opts.nudge] || "Rewrite this reply.",
+        "Keep it in the owner's voice and obey the refund policy above.",
+        "",
+        "Current reply:",
+        '"""',
+        opts.draft,
+        '"""',
+      ].join("\n");
+      const text = await call({
+        model: DRAFT_MODEL,
+        system: buildDraftSystem(opts.profile, opts.policy),
+        maxTokens: 700,
+        messages: [{ role: "user", content: user }],
+      });
+      if (text) return { text, source: "claude" };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Claude unavailable";
+      return { text: localDraft(opts.message, opts.profile, opts.nudge), source: "local", warning: msg };
+    }
+  }
+  return { text: localDraft(opts.message, opts.profile, opts.nudge), source: "local" };
 }
