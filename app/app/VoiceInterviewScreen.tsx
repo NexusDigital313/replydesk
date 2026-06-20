@@ -8,6 +8,8 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { extractProfile, hasKey } from "@/lib/anthropic";
+import type { VoiceProfile as EngineProfile } from "@/lib/voice";
 
 /* ──────────────────────────────────────────────────────────────────────────
    VoiceInterview — Screen 2 of the ReplyDesk redesign.
@@ -209,6 +211,7 @@ export default function VoiceInterviewScreen({
   const [answered, setAnswered] = useState(0);
   const [typing, setTyping] = useState(false);
   const [done, setDone] = useState(false);
+  const [finishing, setFinishing] = useState(false);
 
   const chatRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -277,8 +280,41 @@ export default function VoiceInterviewScreen({
   );
 
   const onFinish = useCallback(() => {
-    onDone(VOICE_PROFILE);
-  }, [onDone]);
+    if (finishing) return;
+    const answers = messages.filter((m) => m.role === "user").map((m) => m.text);
+    const questions = [
+      "What kind of business do you run, and who are you replying to?",
+      "How do you reply to a happy customer?",
+      "How do you handle a complaint / refund / one-star?",
+      "What words or sign-offs are unmistakably you?",
+      "How long do your replies usually run?",
+    ];
+    const transcript = questions.map((q, i) => ({ q, a: answers[i] ?? "" }));
+
+    // The interview mapped into the engine's voice-profile shape — works with no
+    // key and reflects the user's own answers.
+    const base: EngineProfile = {
+      tone: VOICE_PROFILE.tone,
+      wrongHandling: VOICE_PROFILE.pressure,
+      signaturePhrases: VOICE_PROFILE.phrases,
+      avoid: VOICE_PROFILE.avoids,
+      length: VOICE_PROFILE.length,
+      formality: VOICE_PROFILE.formality / 100,
+      business: answers[0] || undefined,
+      transcript,
+    };
+
+    // With a key, derive a genuinely personalized profile from the real answers.
+    if (hasKey()) {
+      setFinishing(true);
+      extractProfile(transcript)
+        .then((p) => onDone({ ...p, transcript }))
+        .catch(() => onDone(base))
+        .finally(() => setFinishing(false));
+      return;
+    }
+    onDone(base);
+  }, [finishing, messages, onDone]);
 
   /* ── Derived view state ────────────────────────────────────────────────────── */
   const a = answered;
@@ -420,17 +456,20 @@ export default function VoiceInterviewScreen({
             <button
               type="button"
               onClick={onFinish}
-              className="flex h-[50px] w-full items-center justify-center gap-[9px] rounded-[13px] bg-[#c15f3c] text-[15px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#d97757] active:translate-y-px"
+              disabled={finishing}
+              className="flex h-[50px] w-full items-center justify-center gap-[9px] rounded-[13px] bg-[#c15f3c] text-[15px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#d97757] active:translate-y-px disabled:opacity-80"
               style={{
                 boxShadow:
                   "0 1px 2px rgba(0,0,0,.4), 0 14px 30px -12px rgba(217,119,87,.65)",
                 animation: `rd-rise-soft .5s ${EASE} both`,
               }}
             >
-              See it draft in your voice
-              <span className="inline-flex h-[17px] w-[17px]">
-                <ArrowIcon />
-              </span>
+              {finishing ? "Reading your voice…" : "See it draft in your voice"}
+              {finishing ? null : (
+                <span className="inline-flex h-[17px] w-[17px]">
+                  <ArrowIcon />
+                </span>
+              )}
             </button>
           )}
         </div>

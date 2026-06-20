@@ -10,6 +10,8 @@ import {
 import type { JSX, ReactNode } from "react";
 import { getSettings, saveSettings, type RefundPolicy } from "@/lib/settings";
 import { involvesCommitment } from "@/lib/triage";
+import { draftReply, rewriteReply, hasKey, type Nudge as EngineNudge } from "@/lib/anthropic";
+import { loadProfile, type VoiceProfile } from "@/lib/voice";
 
 /* ============================================================================
  * WorkspaceScreen — ReplyDesk "the payoff"
@@ -395,13 +397,16 @@ export default function WorkspaceScreen({
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   // Refund/return policy is the owner's call, stored on-device. Default: cautious.
   const [refundPolicy, setRefundPolicy] = useState<RefundPolicy>("owner");
+  const [profile, setProfile] = useState<VoiceProfile | null>(null);
 
   useEffect(() => {
     setRefundPolicy(getSettings().refundPolicy);
+    setProfile(loadProfile());
   }, []);
 
   const rewriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const genId = useRef(0); // guards against out-of-order async draft results
 
   useEffect(() => {
     return () => {
@@ -420,17 +425,41 @@ export default function WorkspaceScreen({
     [sent],
   );
 
-  const select = useCallback((id: string) => {
-    const it = MESSAGES.find((m) => m.id === id);
-    if (!it) return;
-    if (rewriteTimer.current) clearTimeout(rewriteTimer.current);
-    setSelId(id);
-    setTone("base");
-    setDraft(it.variants.base);
-    setRewriting(false);
-    setCopied(false);
-    setRailOpen(false);
-  }, []);
+  const select = useCallback(
+    (id: string) => {
+      const it = MESSAGES.find((m) => m.id === id);
+      if (!it) return;
+      if (rewriteTimer.current) clearTimeout(rewriteTimer.current);
+      setSelId(id);
+      setTone("base");
+      setCopied(false);
+      setRailOpen(false);
+      // Snappy: show the showcase draft instantly. With a key, generate the real
+      // in-your-voice draft and swap it in when it lands.
+      setDraft(it.variants.base);
+      if (hasKey()) {
+        const token = ++genId.current;
+        setRewriting(true);
+        draftReply({
+          message: { body: it.body, channel: it.channel, rating: it.rating || undefined, name: it.name },
+          profile,
+          policy: refundPolicy,
+        })
+          .then((r) => {
+            if (genId.current === token) {
+              setDraft(r.text);
+              setRewriting(false);
+            }
+          })
+          .catch(() => {
+            if (genId.current === token) setRewriting(false);
+          });
+      } else {
+        setRewriting(false);
+      }
+    },
+    [profile, refundPolicy],
+  );
 
   /* Tone nudge: shimmer, then swap variant.
      TODO(claude): replace the scripted variant swap with a follow-up rewrite
@@ -439,23 +468,46 @@ export default function WorkspaceScreen({
   const nudge = useCallback(
     (nextTone: ToneKey) => {
       if (rewriting) return;
+      const it = MESSAGES.find((m) => m.id === selId) ?? MESSAGES[0];
+      let resolved: ToneKey = nextTone;
+      if (nextTone === "alt") resolved = tone === "alt" ? "base" : "alt";
+
+      // With a key: a real follow-up rewrite ("warmer"/"shorter"/"more formal");
+      // Regenerate ("alt") re-rolls a fresh draft. Both obey the voice + policy.
+      if (hasKey()) {
+        const token = ++genId.current;
+        setRewriting(true);
+        const msg = { body: it.body, channel: it.channel, rating: it.rating || undefined, name: it.name };
+        const reqNudge: EngineNudge = resolved === "custom" ? "base" : resolved;
+        const run =
+          nextTone === "alt"
+            ? draftReply({ message: msg, profile, policy: refundPolicy, nudge: "alt" })
+            : rewriteReply({ draft, nudge: reqNudge, message: msg, profile, policy: refundPolicy });
+        run
+          .then((r) => {
+            if (genId.current === token) {
+              setDraft(r.text);
+              setTone(resolved);
+              setRewriting(false);
+            }
+          })
+          .catch(() => {
+            if (genId.current === token) setRewriting(false);
+          });
+        return;
+      }
+
+      // No key — instant showcase variant (with a safe fallback if one's absent).
       setRewriting(true);
       if (rewriteTimer.current) clearTimeout(rewriteTimer.current);
       rewriteTimer.current = setTimeout(() => {
-        const it = MESSAGES.find((m) => m.id === selId) ?? MESSAGES[0];
-        let resolved: ToneKey = nextTone;
-        if (nextTone === "alt") {
-          // Regenerate toggles between the alt re-roll and the base draft.
-          resolved = tone === "alt" ? "base" : "alt";
-        }
-        const text =
-          resolved === "custom" ? it.variants.base : it.variants[resolved];
-        setDraft(text);
+        const variant = resolved === "custom" ? it.variants.base : it.variants[resolved];
+        setDraft(variant ?? it.variants.base);
         setTone(resolved);
         setRewriting(false);
       }, 650);
     },
-    [rewriting, selId, tone],
+    [rewriting, selId, tone, draft, profile, refundPolicy],
   );
 
   /* Send: mark current sent, advance to next unsent (else inbox zero). */

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
+import { validateKey } from "@/lib/anthropic";
 
 type View = "setup" | "verifying" | "connected" | "error";
 
@@ -158,20 +159,16 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
     setFieldError(null);
     setView("verifying");
 
-    // SEAM (real Claude integration): the orchestrator should replace this
-    // simulated delay with the actual test Messages call:
-    //   POST https://api.anthropic.com/v1/messages
-    //   headers: x-api-key, anthropic-version: 2023-06-01,
-    //            anthropic-dangerous-direct-browser-access: true
-    //   body: { model: <cheap>, max_tokens: 1, messages: [...] }
-    //   2xx -> connected ; 401/403/4xx -> error.
-    // Browser -> Anthropic directly. Never proxy or log the key.
-    if (verifyTimer.current) clearTimeout(verifyTimer.current);
-    verifyTimer.current = setTimeout(() => {
-      // Prototype: simulate a successful verification.
-      setView("connected");
-      onKey?.(trimmedKey);
-    }, 1600);
+    // Real verification: one tiny test request straight from the browser to
+    // Anthropic. Never proxied, never logged. 2xx -> connected; else error.
+    validateKey(trimmedKey)
+      .then(() => {
+        onKey?.(trimmedKey);
+        setView("connected");
+      })
+      .catch(() => {
+        setView("error");
+      });
   };
 
   const handleSkip = () => onDone();
