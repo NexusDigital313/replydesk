@@ -2,8 +2,10 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { validateKey } from "@/lib/anthropic";
+import { isPro, activateLicense } from "@/lib/pro";
+import { LS, PRODUCT_NAME } from "@/lib/config";
 
-type View = "setup" | "verifying" | "connected" | "error";
+type View = "license" | "setup" | "verifying" | "connected" | "error";
 
 export interface ConnectScreenProps {
   /** Called by both "Continue to ReplyDesk" (connected) and "Set up later". */
@@ -119,12 +121,22 @@ const ExternalIcon = () => (
 /* ── Component ───────────────────────────────────────────────────────── */
 
 export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
-  const [view, setView] = useState<View>("setup");
+  const [view, setView] = useState<View>("license");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [keyFocused, setKeyFocused] = useState(false);
+
+  // Pro license (Lemon Squeezy)
+  const [licenseKey, setLicenseKey] = useState("");
+  const [licenseError, setLicenseError] = useState<string | null>(null);
+  const [activating, setActivating] = useState(false);
+
+  // Already-licensed users skip the purchase step and go straight to the key.
+  useEffect(() => {
+    if (isPro()) setView("setup");
+  }, []);
 
   const errorId = useId();
   const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,6 +181,23 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
       .catch(() => {
         setView("error");
       });
+  };
+
+  const handleActivate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const key = licenseKey.trim();
+    if (!key) {
+      setLicenseError("Enter the license key from your purchase email.");
+      return;
+    }
+    setLicenseError(null);
+    setActivating(true);
+    activateLicense(key)
+      .then((r) => {
+        if (r.ok) setView("setup");
+        else setLicenseError(r.error || "That license key isn't valid.");
+      })
+      .finally(() => setActivating(false));
   };
 
   const handleSkip = () => onDone();
@@ -242,6 +271,99 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
             className="w-full max-w-[412px]"
             style={{ animation: animForm.replace("rise-in", "rd-rise-in") }}
           >
+            {/* ░░ LICENSE (Pro) ░░ */}
+            {view === "license" && (
+              <div>
+                <div className="mb-[18px] inline-flex items-center gap-[7px] rounded-full border border-[#3a332c] bg-[#211c18] px-[11px] py-[5px] text-[12px] font-medium text-[#db9a7b]">
+                  <span className="h-[11px] w-[11px] rotate-45 rounded-[2px] bg-[#c15f3c]" />
+                  {PRODUCT_NAME}
+                </div>
+                <h1 className="font-display m-0 mb-[10px] text-[34px] font-medium leading-[1.12] tracking-[-.018em] text-[#f7f3ee]">
+                  Claude Opus 4.8, in your voice
+                </h1>
+                <p className="m-0 mb-[24px] text-[15px] leading-[1.55] text-[#9b938c]">
+                  ReplyDesk drafts a reply to every message the way you&apos;d say
+                  it — Anthropic&apos;s most capable model, on your own Claude key.
+                  One license unlocks it.
+                </p>
+
+                <a
+                  href={LS.checkoutUrl || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-disabled={!LS.checkoutUrl}
+                  onClick={(e) => {
+                    if (!LS.checkoutUrl) e.preventDefault();
+                  }}
+                  className="flex h-[48px] items-center justify-center gap-[8px] rounded-[11px] bg-[#c15f3c] text-[15px] font-semibold text-white no-underline transition-[background,transform] duration-150 hover:bg-[#d97757] active:translate-y-[1px]"
+                  style={{
+                    boxShadow:
+                      "0 1px 2px rgba(0,0,0,.4), 0 12px 28px -12px rgba(217,119,87,.6)",
+                    opacity: LS.checkoutUrl ? 1 : 0.55,
+                  }}
+                >
+                  Get {PRODUCT_NAME} — {LS.price}
+                  <span className="inline-flex h-[14px] w-[14px]">
+                    <ExternalIcon />
+                  </span>
+                </a>
+                {!LS.checkoutUrl && (
+                  <p className="m-0 mt-[8px] text-center text-[12px] text-[#6f675f]">
+                    Add your Lemon Squeezy checkout link to{" "}
+                    <span className="font-mono">lib/config.ts</span> to enable this.
+                  </p>
+                )}
+
+                {/* Already purchased → activate the license key from the email */}
+                <form
+                  onSubmit={handleActivate}
+                  noValidate
+                  className="mt-[24px] flex flex-col gap-[11px] border-t border-[#262019] pt-[22px]"
+                >
+                  <span className="text-[13px] font-medium text-[#c9c1ba]">
+                    Already purchased? Enter your license key
+                  </span>
+                  <input
+                    type="text"
+                    value={licenseKey}
+                    onChange={(e) => {
+                      setLicenseKey(e.target.value);
+                      setLicenseError(null);
+                    }}
+                    placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="h-[48px] w-full rounded-[11px] bg-[#211c18] px-[14px] font-mono text-[13.5px] tracking-[.01em] text-[#f0ebe5] outline-none"
+                    style={{
+                      border: `1px solid ${licenseError ? "#9e4a3f" : "#3a332c"}`,
+                    }}
+                  />
+                  {licenseError && (
+                    <span className="text-[12.5px] text-[#e08a82]">
+                      {licenseError}
+                    </span>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={activating}
+                    className="h-[46px] rounded-[11px] border border-[#3a332c] bg-[#211c18] text-[15px] font-semibold text-[#f0ebe5] transition-[background,transform] duration-150 hover:bg-[#2a241f] active:translate-y-[1px] disabled:opacity-60"
+                  >
+                    {activating ? "Activating…" : "Activate license"}
+                  </button>
+                </form>
+
+                <div className="mt-[20px] text-center">
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    className="border-none bg-transparent text-[13px] font-medium text-[#6f675f] transition-colors duration-150 hover:text-[#9b938c]"
+                  >
+                    Just exploring? See the demo →
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* ░░ SETUP ░░ */}
             {view === "setup" && (
               <div>

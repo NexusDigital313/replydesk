@@ -632,7 +632,7 @@ export default function WorkspaceScreen({
                     Refunds &amp; returns
                   </div>
                   <p className="mb-3 text-[12.5px] leading-[1.5] text-[#9b938c]">
-                    When a customer asks for a refund, return, or anything that commits you financially:
+                    When a client asks for a refund, return, or anything that commits you financially:
                   </p>
                   {(
                     [

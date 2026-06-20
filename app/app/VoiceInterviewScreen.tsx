@@ -61,7 +61,7 @@ const GREETING =
 
 /** Claude's reply after each user answer (index 0 = reply to answer #1). */
 const SCRIPT: readonly string[] = [
-  "Got it. When a customer's happy — a thanks, a glowing review — how do you reply? Type one the way you really would. Don't tidy it up for me.",
+  "Got it. When a client's happy — a thanks, a glowing review — how do you reply? Type one the way you really would. Don't tidy it up for me.",
   "Nice. That's already a voice. Now the hard one: something's gone wrong — a complaint, a refund, a one-star. How do you handle it?",
   "Good. Are there words or sign-offs that are just you? Things you always say — or would never be caught saying?",
   "Last one. How long do your replies usually run — a quick line, or a few warm sentences?",
@@ -72,7 +72,7 @@ const PROFILE_PCT = [6, 24, 46, 68, 86, 100] as const;
 
 const PLACEHOLDERS = [
   "Tell Claude about your business…",
-  "Type a real reply to a happy customer…",
+  "Type a real reply to a happy client…",
   "How do you handle a complaint?…",
   "Your go-to words and sign-offs…",
   "A quick line, or a few sentences?…",
@@ -284,7 +284,7 @@ export default function VoiceInterviewScreen({
     const answers = messages.filter((m) => m.role === "user").map((m) => m.text);
     const questions = [
       "What kind of business do you run, and who are you replying to?",
-      "How do you reply to a happy customer?",
+      "How do you reply to a happy client?",
       "How do you handle a complaint / refund / one-star?",
       "What words or sign-offs are unmistakably you?",
       "How long do your replies usually run?",
@@ -495,7 +495,7 @@ export default function VoiceInterviewScreen({
           </span>
         </div>
         <p className="relative mb-5 mt-0 flex-none text-[13px] leading-[1.5] text-[#857c73]">
-          What Claude's learning as you talk. This is what every draft will sound
+          What Claude's learning as you speak. This is what every draft will sound
           like.
         </p>
 
