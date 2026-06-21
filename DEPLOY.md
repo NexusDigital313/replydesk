@@ -23,44 +23,32 @@ Add only what you want to turn on. Nothing here is required to go live.
 |---|---|---|
 | `ANTHROPIC_API_KEY` | You want to pay for Claude for all Pro users | Server drafts Pro replies with Claude. Omit → users bring their own key. |
 | `NEXT_PUBLIC_PAYWALL` | Default `1` | `1` = show Free/Pro paywall. `0` = give everyone Pro (good for a pure demo). |
-| `LICENSE_SECRET` | You want the paywall **enforced** server-side | Any long random string. Without it the paywall is UI-only and Claude is ungated. |
-| `STRIPE_SECRET_KEY` + `STRIPE_PRICE_ID` | Charge real money | Enables real Stripe Checkout. Create a recurring Price in Stripe, paste its id. |
-| `NEXT_PUBLIC_APP_URL` | Production w/ Stripe | Your live URL (e.g. `https://replydesk.com`) for Stripe redirect links. |
+| `NEXT_PUBLIC_LS_CHECKOUT_URL` | Charge real money | Lemon Squeezy product "Buy" link. Buyers check out there and get a license key by email. |
+| `NEXT_PUBLIC_LS_STORE_ID` + `NEXT_PUBLIC_LS_PRODUCT_ID` | Charge real money | Numeric LS store + product id. Locks activation so a key from another store/product can't unlock this app. |
+| `NEXT_PUBLIC_LS_PRICE` | Cosmetic | Price label on the upgrade button (e.g. `$149/yr`). Keep in sync with the LS product. |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | "Connect Google" button | OAuth for Google Business import (live sync also needs Google API approval). |
 
 ### Launch presets
 - **Freemium demo (fastest):** set nothing. Or set `NEXT_PUBLIC_PAYWALL=0` to let everyone try the full Pro experience.
-- **Paid launch:** set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `LICENSE_SECRET`, `NEXT_PUBLIC_APP_URL` (+ `ANTHROPIC_API_KEY` if you cover Claude).
+- **Paid launch:** set the four `NEXT_PUBLIC_LS_*` vars (+ `ANTHROPIC_API_KEY` only if you want to cover Claude for buyers instead of having them bring their own key).
 
-## Billing safety
+## Billing — Lemon Squeezy (Merchant of Record)
 
-Pro access is tied to the **live Stripe subscription**, no database required:
+ReplyDesk Pro is sold through **Lemon Squeezy**, which acts as Merchant of Record —
+they handle VAT/sales tax and the checkout, so there's no ReplyDesk server or database
+in the billing path.
 
-- The license token is short (2 days) and the app **re-verifies the subscription on
-  every load** (`POST /api/license { subscription }`) — if Stripe reports it cancelled,
-  refunded, or lapsed, the client drops to Free immediately and the token isn't renewed.
-- Worst case someone keeps Pro is until their current token expires (≤2 days) without
-  reopening the app.
+1. **Create the product** in Lemon Squeezy and turn ON **License keys** (set an
+   activation/device limit and an expiry that matches your plan).
+2. **Wire it up** via the `NEXT_PUBLIC_LS_*` env vars above (checkout URL + store/product ids).
+3. **Flow:** buyer clicks **Get ReplyDesk Pro** → pays on LS's hosted checkout →
+   receives a license key by email → pastes it into the app → the app calls LS's public
+   **activate/validate** license API straight from the browser (`lib/pro.ts`) and unlocks Pro.
 
-### Instant revocation (optional, built-in)
-
-For revocation the moment a customer cancels (not just on next visit), turn on the
-webhook + KV path:
-
-1. **Create a KV store:** Vercel dashboard → Storage → create a KV (Upstash Redis) store
-   and link it to this project. `KV_REST_API_URL` and `KV_REST_API_TOKEN` are added to the
-   project's env automatically.
-2. **Add the Stripe webhook:** Stripe → Developers → Webhooks → add endpoint
-   `https://YOUR_DOMAIN/api/stripe/webhook`, subscribe to
-   `customer.subscription.deleted`, `customer.subscription.updated`,
-   `customer.subscription.paused`, and copy its **Signing secret** into
-   `STRIPE_WEBHOOK_SECRET`.
-
-How it works: the webhook verifies Stripe's signature, then flags the subscription as
-revoked in KV; `/api/draft` checks that flag before calling Claude, so access stops on the
-next draft. It **fails open** — if KV is unreachable, paying customers are never wrongly
-locked out, and the ≤2-day re-verification remains the backstop. Leave KV/webhook unset and
-you simply keep the visit-based revocation above (fine for launch).
+### Revocation / expiry
+Pro is re-checked against Lemon Squeezy on every load (`revalidate()` in `lib/pro.ts`).
+A refunded, expired, or deactivated key drops to Free within a visit — no webhook required.
+The check **fails open** on a network error so a paying customer is never wrongly locked out.
 
 ## Notes
 - All user data (business profile, saved replies, license, API key) lives in the browser's

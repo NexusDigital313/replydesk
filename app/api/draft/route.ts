@@ -4,42 +4,31 @@ import {
   buildUserPrompt,
   localReply,
 } from "@/lib/localEngine";
-import { verifyLicense } from "@/lib/license";
-import { isRevoked } from "@/lib/kv";
 import type { DraftRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  let body: DraftRequest & { apiKey?: string; license?: string };
+  let body: DraftRequest & { apiKey?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { review, rating, tone, author, business, apiKey, license } = body;
+  const { review, rating, tone, author, business, apiKey } = body;
   if (!review?.trim()) {
     return NextResponse.json({ error: "Review text is required" }, { status: 400 });
   }
 
   const draftReq: DraftRequest = { review, rating, tone, author, business };
 
-  // Entitlement: when LICENSE_SECRET is set the paywall is live and Claude is
-  // a Pro capability. Without it (self-host / dev), everyone is Pro.
-  const secret = process.env.LICENSE_SECRET;
-  let isPro = !secret;
-  if (secret && license) {
-    const decoded = verifyLicense(license, secret);
-    isPro = !!decoded;
-    // Instant revocation: a cancelled subscription is flagged in KV by the Stripe
-    // webhook, so we cut Claude off even while the signed token is still valid.
-    if (isPro && decoded?.sub && (await isRevoked(decoded.sub))) isPro = false;
-  }
-
+  // Entitlement is enforced client-side by the Lemon Squeezy license (lib/pro.ts):
+  // Pro unlocks the app, and the buyer brings their own Claude key. So server-side,
+  // Claude is used whenever a key is present — no ReplyDesk billing in the path.
   const key = (apiKey || process.env.ANTHROPIC_API_KEY || "").trim();
-  const canUseClaude = isPro && !!key;
+  const canUseClaude = !!key;
 
   if (!canUseClaude) {
     return NextResponse.json({ reply: localReply(draftReq), source: "local" });

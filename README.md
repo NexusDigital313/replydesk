@@ -32,21 +32,21 @@ Copy `.env.example` → `.env.local` and fill what you need:
 
 | Variable | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` | Enables Claude drafting for Pro users. Without it, the local engine is used. |
+| `ANTHROPIC_API_KEY` | Enables Claude drafting for Pro users. Without it, the local engine is used (Pro users normally bring their own key). |
 | `NEXT_PUBLIC_PAYWALL` | `1` (default) shows the Free/Pro paywall UI; `0` gives everyone Pro. |
-| `LICENSE_SECRET` | Any long random string. Set it to make the paywall **enforce** Pro server-side (Claude becomes a paid capability). |
-| `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID` | Enables real Stripe Checkout for the Pro subscription. Create a recurring Price in Stripe and paste its id. |
-| `NEXT_PUBLIC_APP_URL` | Public base URL for Stripe redirects in production (e.g. `https://replydesk.com`). |
+| `NEXT_PUBLIC_LS_CHECKOUT_URL` | Lemon Squeezy product "Buy" link — where buyers check out and get a license key. |
+| `NEXT_PUBLIC_LS_STORE_ID` / `NEXT_PUBLIC_LS_PRODUCT_ID` | Numeric LS store + product id. Locks activation to this product. |
+| `NEXT_PUBLIC_LS_PRICE` | Price label on the upgrade button (e.g. `$149/yr`). |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Enables the "Connect Google" OAuth button. |
 
-**Billing flow:** when Stripe + `LICENSE_SECRET` are set, the upgrade button opens Stripe Checkout → on success the app verifies the session (`/api/license`) and stores a signed, expiring license token that the draft API checks before using Claude. When Stripe is **not** configured, "Upgrade" does a local demo unlock so you can preview the Pro experience. For production you'll want a Stripe webhook to revoke on cancellation — the MVP relies on a ~monthly token that renews on the next visit.
+**Billing flow:** Pro is sold through **Lemon Squeezy** (Merchant of Record — they handle VAT/sales tax). The upgrade button opens the LS checkout (`NEXT_PUBLIC_LS_CHECKOUT_URL`); after paying, the buyer gets a license key by email and pastes it into the app, which activates/validates it directly against LS's public license API from the browser (`lib/pro.ts`) — no ReplyDesk server in the billing path. Pro is re-checked on every load, so refunds/expiry drop to Free within a visit. When the LS vars are **not** set, "Upgrade" does a local demo unlock so you can preview the Pro experience.
 
 **Google import:** the paste / CSV importer works for everyone, today. Live review sync from Google additionally requires your app to be approved for the [Google Business Profile API](https://developers.google.com/my-business) (an allowlisted API) — the OAuth routes are scaffolded for when you have access.
 
 ## Deploy
 
-Push to GitHub → import into [Vercel](https://vercel.com) → set the env vars above. For Stripe, also set the success/cancel domain via `NEXT_PUBLIC_APP_URL`.
+Push to GitHub → import into [Vercel](https://vercel.com) → set the env vars above. For paid launch, create the Lemon Squeezy product (with license keys ON) and set the four `NEXT_PUBLIC_LS_*` vars. See [DEPLOY.md](./DEPLOY.md).
 
 ## Stack
 
-Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · `@anthropic-ai/sdk` · Stripe + Google via REST (no extra SDKs)
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · `@anthropic-ai/sdk` · Lemon Squeezy + Google via REST (no extra SDKs)

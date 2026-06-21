@@ -18,8 +18,8 @@ export const PLAN_LIMITS: Record<Plan, Limits> = {
 };
 
 export const PRO = {
-  price: "$29",
-  period: "/mo",
+  price: "$149",
+  period: "/yr",
   features: [
     "Unlimited replies",
     "Claude-powered drafting (best quality)",
