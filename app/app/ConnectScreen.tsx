@@ -287,30 +287,82 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
                   One license unlocks it.
                 </p>
 
-                <a
-                  href={LS.checkoutUrl || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-disabled={!LS.checkoutUrl}
-                  onClick={(e) => {
-                    if (!LS.checkoutUrl) e.preventDefault();
-                  }}
-                  className="flex h-[48px] items-center justify-center gap-[8px] rounded-[11px] bg-[#c15f3c] text-[15px] font-semibold text-white no-underline transition-[background,transform] duration-150 hover:bg-[#d97757] active:translate-y-[1px]"
-                  style={{
-                    boxShadow:
-                      "0 1px 2px rgba(0,0,0,.4), 0 12px 28px -12px rgba(217,119,87,.6)",
-                    opacity: LS.checkoutUrl ? 1 : 0.55,
-                  }}
-                >
-                  Get {PRODUCT_NAME} — {LS.price}
-                  <span className="inline-flex h-[14px] w-[14px]">
-                    <ExternalIcon />
-                  </span>
-                </a>
-                {!LS.checkoutUrl && (
+                {/* Two ways to buy: annual (best value, highlighted) + monthly
+                    (low-commitment). A license from either unlocks the app. */}
+                <div className="flex flex-col gap-[10px]">
+                  {/* Annual — primary */}
+                  <a
+                    href={LS.annual.checkoutUrl || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-disabled={!LS.annual.checkoutUrl}
+                    onClick={(e) => {
+                      if (!LS.annual.checkoutUrl) e.preventDefault();
+                    }}
+                    className="group flex items-center justify-between rounded-[11px] bg-[#c15f3c] px-[16px] py-[13px] no-underline transition-[background,transform] duration-150 hover:bg-[#d97757] active:translate-y-[1px]"
+                    style={{
+                      boxShadow:
+                        "0 1px 2px rgba(0,0,0,.4), 0 12px 28px -12px rgba(217,119,87,.6)",
+                      opacity: LS.annual.checkoutUrl ? 1 : 0.55,
+                    }}
+                  >
+                    <span className="flex flex-col gap-[2px] text-left">
+                      <span className="flex items-center gap-[8px] text-[15px] font-semibold text-white">
+                        Annual
+                        <span className="rounded-full bg-[#ffffff26] px-[7px] py-[2px] text-[10.5px] font-semibold tracking-[.01em] text-white">
+                          {LS.annual.badge}
+                        </span>
+                      </span>
+                      <span className="text-[12.5px] text-[#ffe7db]">
+                        Billed once a year
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-[6px] text-[15px] font-semibold text-white">
+                      {LS.annual.price}
+                      <span className="text-[13px] font-medium text-[#ffe7db]">
+                        {LS.annual.period}
+                      </span>
+                      <span className="inline-flex h-[14px] w-[14px] text-white">
+                        <ExternalIcon />
+                      </span>
+                    </span>
+                  </a>
+
+                  {/* Monthly — secondary */}
+                  <a
+                    href={LS.monthly.checkoutUrl || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-disabled={!LS.monthly.checkoutUrl}
+                    onClick={(e) => {
+                      if (!LS.monthly.checkoutUrl) e.preventDefault();
+                    }}
+                    className="flex items-center justify-between rounded-[11px] border border-[#3a332c] bg-[#211c18] px-[16px] py-[13px] no-underline transition-[background,transform] duration-150 hover:bg-[#2a241f] active:translate-y-[1px]"
+                    style={{ opacity: LS.monthly.checkoutUrl ? 1 : 0.55 }}
+                  >
+                    <span className="flex flex-col gap-[2px] text-left">
+                      <span className="text-[15px] font-semibold text-[#f0ebe5]">
+                        Monthly
+                      </span>
+                      <span className="text-[12.5px] text-[#9b938c]">
+                        {LS.monthly.note}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-[6px] text-[15px] font-semibold text-[#f0ebe5]">
+                      {LS.monthly.price}
+                      <span className="text-[13px] font-medium text-[#9b938c]">
+                        {LS.monthly.period}
+                      </span>
+                      <span className="inline-flex h-[14px] w-[14px] text-[#db9a7b]">
+                        <ExternalIcon />
+                      </span>
+                    </span>
+                  </a>
+                </div>
+                {!LS.annual.checkoutUrl && !LS.monthly.checkoutUrl && (
                   <p className="m-0 mt-[8px] text-center text-[12px] text-[#6f675f]">
-                    Add your Lemon Squeezy checkout link to{" "}
-                    <span className="font-mono">lib/config.ts</span> to enable this.
+                    Add your Lemon Squeezy checkout links to{" "}
+                    <span className="font-mono">lib/config.ts</span> to enable these.
                   </p>
                 )}
 

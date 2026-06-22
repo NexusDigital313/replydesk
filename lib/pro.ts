@@ -6,7 +6,7 @@
  * public license API from the browser — no ReplyDesk server in the path, which
  * keeps the whole product local-first.
  */
-import { LS } from "./config";
+import { LS, ACCEPTED_PRODUCT_IDS } from "./config";
 
 const API = "https://api.lemonsqueezy.com/v1/licenses";
 const STORE_KEY = "replydesk.license";
@@ -50,7 +50,9 @@ export function clearLicense() {
 function storeMatches(meta?: { store_id?: number; product_id?: number }): boolean {
   if (!meta) return true;
   if (LS.storeId && String(meta.store_id) !== LS.storeId) return false;
-  if (LS.productId && String(meta.product_id) !== LS.productId) return false;
+  // A license is valid if it came from either the monthly or annual product.
+  if (ACCEPTED_PRODUCT_IDS.length && !ACCEPTED_PRODUCT_IDS.includes(String(meta.product_id)))
+    return false;
   return true;
 }
 

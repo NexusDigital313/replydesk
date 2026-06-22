@@ -18,8 +18,12 @@ export const PLAN_LIMITS: Record<Plan, Limits> = {
 };
 
 export const PRO = {
+  // Two ways to buy: monthly to start cheap, annual to save (2 months free).
+  monthlyPrice: "$19",
+  monthlyPeriod: "/mo",
   price: "$149",
   period: "/yr",
+  annualSavings: "Save $79 · 2 months free",
   features: [
     "Unlimited replies",
     "Claude-powered drafting (best quality)",
