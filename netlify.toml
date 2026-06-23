@@ -1,0 +1,15 @@
+# Netlify deploy config for ReplyDesk (Next.js 15, App Router)
+# The Next.js runtime plugin turns the App Router build into Netlify
+# Functions/Edge automatically — API routes (/api/draft, /api/google/*)
+# run server-side; the rest is served as static + ISR.
+
+[build]
+  command = "pnpm build"
+  # publish dir is managed by @netlify/plugin-nextjs; do not hardcode .next
+
+[build.environment]
+  # Use the pinned pnpm via corepack and a modern Node.
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

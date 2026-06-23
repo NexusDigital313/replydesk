@@ -17,6 +17,11 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.URL ||
+      "http://localhost:3000",
+  ),
   title: "ReplyDesk — On-brand replies to every review",
   description:
     "Paste a customer review, get a polished reply in your business's voice — plus a live sentiment dashboard. For restaurants, dentists, salons and every local business.",

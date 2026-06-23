@@ -1,21 +1,23 @@
 # Shipping ReplyDesk
 
-Next.js 15 app → **Vercel**. Build is green (`pnpm build`).
+Next.js 15 app → **Netlify**. Build is green (`pnpm build`). Config lives in
+`netlify.toml` (`@netlify/plugin-nextjs` runs the App Router server-side).
 
-## Deploy (one command)
-
-From this folder:
+## Deploy (from this folder)
 
 ```bash
-npx vercel        # first run: logs you in, links/creates the project, deploys a preview URL
-npx vercel --prod # promote to your production domain
+netlify login                       # one-time browser auth
+netlify init                        # create/link a Netlify site (reads netlify.toml)
+netlify env:import .env.local       # push the NEXT_PUBLIC_LS_* + app-url vars
+netlify deploy --build --prod       # build on Netlify + promote to production
 ```
 
-That's it for a **freemium launch** — no env vars required. The local reply engine
-works for everyone, the paywall runs in soft/demo mode, and users can paste their
-own Anthropic key for Claude drafting.
+That's it for a **freemium launch** — no env vars are strictly required. The local
+reply engine works for everyone, the paywall runs in soft/demo mode, and users can
+paste their own Anthropic key for Claude drafting. Once the site is linked, every
+`git push` to `main` auto-deploys.
 
-## Environment variables (set in Vercel → Project → Settings → Environment Variables)
+## Environment variables (set in Netlify → Site configuration → Environment variables, or `netlify env:import .env.local`)
 
 Add only what you want to turn on. Nothing here is required to go live.
 
