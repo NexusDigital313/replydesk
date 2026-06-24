@@ -44,3 +44,19 @@ export const LS = {
 export const ACCEPTED_PRODUCT_IDS = [LS.monthly.productId, LS.annual.productId].filter(Boolean);
 
 export const PRODUCT_NAME = "ReplyDesk Pro";
+
+// Public-facing seller identity + support contact. Surfaced in the footer and
+// on every legal page (/terms, /privacy, /refund, /contact). Lemon Squeezy is
+// the Merchant of Record, but buyers — and their store-approval reviewers —
+// still need a real, monitored way to reach a human behind the store.
+//
+// SWAP THESE before/at launch:
+//   • SUPPORT_EMAIL — point it at an inbox you actually watch. A branded
+//     address (e.g. support@yourdomain) reads better than a personal one;
+//     either way it must be live, because reviewers (and customers) email it.
+//   • SELLER_NAME   — must reconcile with the legal/business name you submit in
+//     the Lemon Squeezy activation + KYC/KYB step, or approval stalls.
+// Both can be overridden per-environment via NEXT_PUBLIC_* without a code change.
+export const SUPPORT_EMAIL =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "jakep8888@proton.me";
+export const SELLER_NAME = process.env.NEXT_PUBLIC_SELLER_NAME ?? "ReplyDeskPro";

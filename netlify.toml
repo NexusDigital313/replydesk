@@ -11,5 +11,16 @@
   # Use the pinned pnpm via corepack and a modern Node.
   NODE_VERSION = "20"
 
+  # Paywall + Lemon Squeezy (all NEXT_PUBLIC -> public by design; license
+  # validation is browser-side against LS's public API, no secrets here).
+  # These MUST be present at build time or the deployed app ships with no
+  # paywall / dead upgrade buttons.
+  NEXT_PUBLIC_PAYWALL = "1"
+  NEXT_PUBLIC_LS_STORE_ID = "413375"
+  NEXT_PUBLIC_LS_CHECKOUT_URL_MONTHLY = "https://replydesk.lemonsqueezy.com/checkout/buy/f7e89d58-e42b-4ad0-a91a-58cb86c04070"
+  NEXT_PUBLIC_LS_PRODUCT_ID_MONTHLY = "1164071"
+  NEXT_PUBLIC_LS_CHECKOUT_URL_ANNUAL = "https://replydesk.lemonsqueezy.com/checkout/buy/06d01815-bbdb-42b8-8411-56b11ef91745"
+  NEXT_PUBLIC_LS_PRODUCT_ID_ANNUAL = "1164073"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

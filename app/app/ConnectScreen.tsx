@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { validateKey } from "@/lib/anthropic";
 import { isPro, activateLicense } from "@/lib/pro";
-import { LS, PRODUCT_NAME } from "@/lib/config";
+import { LS, PRODUCT_NAME, SELLER_NAME } from "@/lib/config";
 
 type View = "license" | "setup" | "verifying" | "connected" | "error";
 
@@ -663,22 +663,41 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
 
         {/* Footer */}
         <footer
-          className="flex gap-[20px] text-[12.5px] text-[#6f675f]"
+          className="flex flex-col gap-[10px] text-[12.5px] text-[#6f675f]"
           style={{ animation: animFooter.replace("rise-soft", "rd-rise-soft") }}
         >
-          <span>© 2026 ReplyDesk</span>
-          <a
-            href="#"
-            className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
-          >
-            Privacy
-          </a>
-          <a
-            href="#"
-            className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
-          >
-            Terms
-          </a>
+          <div className="flex flex-wrap items-center gap-x-[18px] gap-y-[6px]">
+            <span>© 2026 {SELLER_NAME}</span>
+            <a
+              href="/privacy"
+              className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
+            >
+              Privacy
+            </a>
+            <a
+              href="/terms"
+              className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
+            >
+              Terms
+            </a>
+            <a
+              href="/refund"
+              className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
+            >
+              Refunds
+            </a>
+            <a
+              href="/contact"
+              className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
+            >
+              Contact
+            </a>
+          </div>
+          <p className="m-0 max-w-[440px] text-[11px] leading-[1.5] text-[#5b544c]">
+            Not affiliated with or endorsed by Anthropic or Google.
+            &ldquo;Claude&rdquo; and &ldquo;Google&rdquo; are trademarks of their
+            respective owners.
+          </p>
         </footer>
       </div>
 
