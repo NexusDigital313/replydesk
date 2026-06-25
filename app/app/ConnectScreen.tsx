@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { validateKey } from "@/lib/anthropic";
 import { isPro, activateLicense } from "@/lib/pro";
 import { LS, PRODUCT_NAME, SELLER_NAME } from "@/lib/config";
@@ -668,30 +669,30 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
         >
           <div className="flex flex-wrap items-center gap-x-[18px] gap-y-[6px]">
             <span>© 2026 {SELLER_NAME}</span>
-            <a
+            <Link
               href="/privacy"
               className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
             >
               Privacy
-            </a>
-            <a
+            </Link>
+            <Link
               href="/terms"
               className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
             >
               Terms
-            </a>
-            <a
+            </Link>
+            <Link
               href="/refund"
               className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
             >
               Refunds
-            </a>
-            <a
+            </Link>
+            <Link
               href="/contact"
               className="text-[#6f675f] no-underline transition-colors hover:text-[#9b938c]"
             >
               Contact
-            </a>
+            </Link>
           </div>
           <p className="m-0 max-w-[440px] text-[11px] leading-[1.5] text-[#5b544c]">
             Not affiliated with or endorsed by Anthropic or Google.

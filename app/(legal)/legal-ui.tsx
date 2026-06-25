@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { SUPPORT_EMAIL } from "@/lib/config";
 
@@ -65,14 +66,21 @@ export function Mail({ children }: { children?: ReactNode }) {
   );
 }
 
+// Route-aware link: internal hrefs ("/refund") use next/link for instant
+// client-side navigation; external hrefs open in a new tab. One component so
+// every legal cross-link and outbound link stays consistent.
 export function A({ href, children }: { href: string; children: ReactNode }) {
+  const cls =
+    "font-medium text-[#d97757] no-underline underline-offset-2 transition-colors hover:text-[#e8956f] hover:underline";
+  if (href.startsWith("/")) {
+    return (
+      <Link href={href} className={cls}>
+        {children}
+      </Link>
+    );
+  }
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="font-medium text-[#d97757] no-underline underline-offset-2 transition-colors hover:text-[#e8956f] hover:underline"
-    >
+    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
       {children}
     </a>
   );
