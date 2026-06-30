@@ -7,5 +7,6 @@
 .env*.local
 .env
 .vercel
+.netlify
 next-env.d.ts
 *.tsbuildinfo
