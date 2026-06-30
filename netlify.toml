@@ -8,8 +8,9 @@
   # publish dir is managed by @netlify/plugin-nextjs; do not hardcode .next
 
 [build.environment]
-  # Use the pinned pnpm via corepack and a modern Node.
-  NODE_VERSION = "20"
+  # pnpm 11.x requires Node >=22.13 (Node 20 crashes: "No such built-in
+  # module: node:sqlite"), so the Netlify infra build needs Node 22.
+  NODE_VERSION = "22"
 
   # Paywall + Lemon Squeezy (all NEXT_PUBLIC -> public by design; license
   # validation is browser-side against LS's public API, no secrets here).
