@@ -24,10 +24,11 @@ export async function POST(req: Request) {
 
   const draftReq: DraftRequest = { review, rating, tone, author, business };
 
-  // Entitlement is enforced client-side by the Lemon Squeezy license (lib/pro.ts):
-  // Pro unlocks the app, and the buyer brings their own Claude key. So server-side,
-  // Claude is used whenever a key is present — no ReplyDesk billing in the path.
-  const key = (apiKey || process.env.ANTHROPIC_API_KEY || "").trim();
+  // BYO-key only: the buyer brings their own Claude key (Lemon Squeezy license
+  // just unlocks the app, lib/pro.ts). We deliberately do NOT fall back to a
+  // server-side ANTHROPIC_API_KEY, so the owner can never be billed for a
+  // customer's usage — no key in the request means the free local engine.
+  const key = (apiKey || "").trim();
   const canUseClaude = !!key;
 
   if (!canUseClaude) {
