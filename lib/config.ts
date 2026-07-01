@@ -26,7 +26,7 @@ export const LS = {
   monthly: {
     checkoutUrl: process.env.NEXT_PUBLIC_LS_CHECKOUT_URL_MONTHLY ?? "",
     productId: process.env.NEXT_PUBLIC_LS_PRODUCT_ID_MONTHLY ?? "",
-    price: "$19",
+    price: "$19.99",
     period: "/mo",
     note: "Cancel anytime",
   } as PlanOption,
@@ -34,7 +34,7 @@ export const LS = {
   annual: {
     checkoutUrl: process.env.NEXT_PUBLIC_LS_CHECKOUT_URL_ANNUAL ?? "",
     productId: process.env.NEXT_PUBLIC_LS_PRODUCT_ID_ANNUAL ?? "",
-    price: "$149",
+    price: "$149.99",
     period: "/yr",
     badge: "Save $79 · 2 months free",
   } as PlanOption,
