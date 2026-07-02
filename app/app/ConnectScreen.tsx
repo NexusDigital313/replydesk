@@ -383,7 +383,7 @@ export default function ConnectScreen({ onDone, onKey }: ConnectScreenProps) {
                       setLicenseKey(e.target.value);
                       setLicenseError(null);
                     }}
-                    placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+                    placeholder="XXXXXXXX-XXXX-XXXX-…"
                     autoComplete="off"
                     spellCheck={false}
                     className="h-[48px] w-full rounded-[11px] bg-[#211c18] px-[14px] font-mono text-[13.5px] tracking-[.01em] text-[#f0ebe5] outline-none"
