@@ -1,3 +1,11 @@
+// Copyright (c) 2026 Jacob Douglas Parmenter. All Rights Reserved.
+// Proprietary and Confidential.
+//
+// Unauthorized reproduction, copying, modification, distribution,
+// redistribution, publication, reverse engineering, decompilation, or
+// disassembly of this file, in whole or in part, via any medium, is
+// strictly prohibited without explicit prior written authorization.
+
 import type { Metadata } from "next";
 import { LegalTitle, H2, P, UL, Mail, A } from "../legal-ui";
 import { SELLER_NAME, PRODUCT_NAME } from "@/lib/config";

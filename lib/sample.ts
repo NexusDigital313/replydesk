@@ -1,3 +1,11 @@
+// Copyright (c) 2026 Jacob Douglas Parmenter. All Rights Reserved.
+// Proprietary and Confidential.
+//
+// Unauthorized reproduction, copying, modification, distribution,
+// redistribution, publication, reverse engineering, decompilation, or
+// disassembly of this file, in whole or in part, via any medium, is
+// strictly prohibited without explicit prior written authorization.
+
 export const SAMPLE_REVIEWS: { text: string; rating: number; author: string }[] = [
   {
     text: "Waited almost 40 minutes for our mains and when they came the pasta was lukewarm. Server was apologetic but the kitchen was clearly overwhelmed.",
